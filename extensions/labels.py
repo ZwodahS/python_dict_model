@@ -21,7 +21,7 @@
 
 from ..dict_model import *
 
-class CleanerMixin(Mixin):
+class LabelMixin(Mixin):
     """
     Cleaner mixin allows you to specify a label and allow you to run a "clean_label" method
     to clean inclusive/exclusive fields
