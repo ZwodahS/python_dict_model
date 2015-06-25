@@ -282,11 +282,13 @@ class DictField(TypedField):
 
 class MapField(DictField):
 
-    def __init__(self, inner_type=None, **kwargs):
+    def __init__(self, inner_type=None, ensure_dict=True, remove_none_value=True, **kwargs):
         super().__init__(**kwargs)
         if inner_type is None or not isinstance(inner_type, Field):
             raise DictFieldError(message="Innertype for MapField needs to be a Field")
         self.inner_type = inner_type
+        self.ensure_dict = ensure_dict
+        self.remove_none_value = remove_none_value
 
     def errors(self, value, with_key=None):
         yield from super().errors(value, with_key)
@@ -305,7 +307,7 @@ class MapField(DictField):
         if isinstance(value, dict):
             if isinstance(self.inner_type, DefinedDictField):
                 for k, v in value.items():
-                    if document[key].get(k) is None:
+                    if document[key].get(k) is None or v is None:
                         document[key][k] = v
                     else:
                         self.inner_type.model.update(document[key][k], v)
@@ -315,6 +317,21 @@ class MapField(DictField):
                         document[key][k] = v
                     else:
                         self.inner_type.update(document[key], k, v)
+
+    def clean(self, document, key, **kwargs):
+        super().clean(document, key, **kwargs)
+        if self.ensure_dict and document.get(key) is None:
+            document[key] = {}
+        if document.get(key) is not None:
+            if self.remove_none_value:
+                none_keys = []
+                for k, v in document[key].items():
+                    if v is None:
+                        none_keys.append(k)
+                for n in none_keys:
+                    document[key].pop(n)
+            for k, v in document.get(key).items():
+                self.inner_type.clean(document.get(key), k, **kwargs)
 
 
 class DefinedDictField(DictField):
