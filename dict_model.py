@@ -245,6 +245,12 @@ class ListField(TypedField):
         if (self.remove_none_value and document.get(key) is not None and
                 isinstance(document.get(key), list)):
             document[key] = [ item for item in document.get(key) if item is not None ]
+        if self.inner_type is not None and document.get(key):
+            # need to handle other cleaning but let's deal with DefinedDictField first
+            if isinstance(self.inner_type, DefinedDictField):
+                for item in document[key]:
+                    self.inner_type.model.clean_document(item, **kwargs)
+
 
 class DateTimeField(Field):
     """Field used to store datetime object.
