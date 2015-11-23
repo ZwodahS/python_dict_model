@@ -173,7 +173,7 @@ class NumberField(TypedField):
     def errors(self, value, with_key=None):
         yield from super().errors(value, with_key)
         if value is not None:
-            if (self.min is not None and value < self.min) or (self.max is not None and value >= self.max):
+            if (self.min is not None and value < self.min) or (self.max is not None and value > self.max):
                 if with_key:
                     yield (with_key, Field.ERROR_VALUE, value)
                 else:
@@ -246,7 +246,7 @@ class ListField(TypedField):
                 isinstance(document.get(key), list)):
             document[key] = [ item for item in document.get(key) if item is not None ]
         if self.inner_type is not None and document.get(key):
-            # need to handle other cleaning but let's deal with DefinedDictField first
+            # need to handle other cleaning but lets deal with DefinedDictField fintirst
             if isinstance(self.inner_type, DefinedDictField):
                 for item in document[key]:
                     self.inner_type.model.clean_document(item, **kwargs)
